@@ -25,14 +25,14 @@
         }
 
         /* Specifically requested +5px larger elements (Base 21px + 5px = 26px or relative to context) */
-        /* Since base is already enlarged, we will add a utility class for the "extra large" requests */
         .text-plus-5 {
             font-size: 26px !important;
             line-height: 1.5;
         }
         
-        .validation-text-large {
-            font-size: 22px !important; /* 17px (roughly base for small text) + 5px */
+        /* Specific font size for clear buttons as requested (+5px relative to base button size) */
+        .btn-clear-large {
+            font-size: 19px !important; /* Base usually 14px -> +5px */
         }
 
         /* Utility */
@@ -102,12 +102,12 @@
         /* Preview Alignment Adjustments */
         .preview-amount {
             position: relative;
-            top: -3px; /* Move up 3px */
+            top: -6px; /* Moved up 3px more from previous -3px */
         }
         
         .preview-currency {
             position: relative;
-            top: -6px; /* Move up 6px */
+            top: -9px; /* Moved up 3px more from previous -6px */
             margin-right: 2px;
         }
 
@@ -129,18 +129,6 @@
             color: #4169E1; /* Royal Blue Text */
             font-weight: bold;
             border-radius: 0.25rem;
-        }
-        
-        /* Section Headers with Icons */
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 0.5rem;
-            font-weight: bold;
-            font-size: 1.5rem;
         }
     </style>
 </head>
@@ -169,10 +157,9 @@
             <div id="inputFormSection" class="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6 border-b pb-2">
                     <h2 class="text-2xl font-bold flex items-center gap-3">
-                        <span class="border-2 border-black p-1 rounded"><i class="fa-solid fa-bars"></i></span>
-                        填寫計算資料
+                        ✍🏻 填寫計算資料
                     </h2>
-                    <button type="button" onclick="clearTerminationForm()" class="bg-gray-200 text-gray-700 px-4 py-1 rounded text-sm hover:bg-gray-300">
+                    <button type="button" onclick="clearTerminationForm()" class="bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300 btn-clear-large">
                         <i class="fa-solid fa-eraser mr-1"></i> 清除內容
                     </button>
                 </div>
@@ -196,7 +183,7 @@
                     <!-- Contracts -->
                     <div class="mb-6">
                         <label class="block font-semibold mb-1">這是第幾份合約 (即問前後總共有幾多份合約) 數量會影響下面的「享有年假日數」</label>
-                        <select id="contractCount" class="input-box" onchange="calcLeave()">
+                        <select id="contractCount" class="input-box" onchange="calcLeave(); validateRequired(this);">
                             <option value="">請選擇</option>
                             <option value="1">1份</option>
                             <option value="2">2份</option>
@@ -224,7 +211,7 @@
                     </div>
 
                     <div class="mb-6">
-                        <label class="block font-semibold mb-1">離職月份的支薪期的第一天：</label>
+                        <label class="block font-semibold mb-1">離職月份的支薪期的第一天</label>
                         <div id="periodStart" class="calc-result-box font-bold">-</div>
                     </div>
 
@@ -236,34 +223,35 @@
 
                     <!-- Work Days Result -->
                     <div class="mb-6">
-                        <label class="block font-semibold mb-1">離職月份的工作日數：</label>
+                        <!-- Moved Late Payment Warning here -->
+                        <div id="warn-latepay" class="validation-error text-plus-5 mb-2">提醒：出糧不能遲多過7天，完整月份的日數加7天。例如：2月28號+8日，就已經出糧遲多過7天。所以應先出糧其中的月薪，餘下的日數才填寫在「上個支薪期的工資結算日」</div>
+
+                        <label class="block font-semibold mb-1">離職月份的工作日數</label>
                         <div id="workDaysResult" class="calc-result-box font-bold">-</div>
                         
-                        <!-- Warnings moved below Work Days as requested -->
                         <div id="warn-3months" class="validation-error text-plus-5">提醒：受僱未滿3個月，則沒有有薪年假，因此下面的「享有年假日數」應填寫為0日。如果想更改為0日，則在「已放年假日數」減相同的日數以互相抵消</div>
-                        <div id="warn-latepay" class="validation-error text-plus-5">提醒：出糧不能遲多過7天，完整月份的日數加7天。例如：2月28號+8日，就已經出糧遲多過7天。所以應先出糧其中的月薪，餘下的日數才填寫在「上個支薪期的工資結算日」</div>
                     </div>
 
                     <!-- Leave Calculations -->
                     <div class="mb-6">
-                        <label class="block font-semibold mb-1 text-black">享有年假日數 (按比例)：</label>
+                        <label class="block font-semibold mb-1 text-black">享有年假日數 (按比例)</label>
                         <div id="proRataLeave" class="calc-result-box text-black font-bold">0.000</div>
                     </div>
 
                     <div class="mb-6">
-                        <label class="block font-semibold mb-1 text-black">享有年假+假期日數 (最終)：</label>
+                        <label class="block font-semibold mb-1 text-black">享有年假+假期日數 (最終)</label>
                         <div id="finalLeaveDays" class="calc-result-box text-black font-bold">0.000</div>
                     </div>
 
                     <div class="mb-6">
                         <label class="block font-semibold mb-1 text-black">已放年假日數</label>
-                        <input type="number" id="leaveTaken" class="input-box text-black" value="0" oninput="calcFinalLeave()" onblur="validateRequired(this);">
+                        <input type="number" id="leaveTaken" class="input-box text-black" placeholder="請輸入數字" oninput="calcFinalLeave()" onblur="validateRequired(this);">
                         <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                     </div>
 
                     <div class="mb-6">
                         <label class="block font-semibold mb-1 text-black">未放假期日數 (即是 休息日 和 勞工假期)</label>
-                        <input type="number" id="holidaysUntaken" class="input-box text-black" value="0" oninput="calcFinalLeave()" onblur="validateRequired(this);">
+                        <input type="number" id="holidaysUntaken" class="input-box text-black" placeholder="請輸入數字" oninput="calcFinalLeave()" onblur="validateRequired(this);">
                         <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                     </div>
 
@@ -289,15 +277,19 @@
                         </div>
                     </div>
 
-                    <!-- Checkbox sections -->
+                    <!-- Notice Pay Section -->
                     <div class="mb-6 p-4 border rounded bg-gray-50">
-                        <label class="flex items-center space-x-2 cursor-pointer mb-2">
-                            <input type="checkbox" id="checkNotice" class="w-5 h-5 text-blue-600" onchange="toggleInput('noticeInputGroup')">
-                            <span class="font-semibold">一個月代通知金 (如有)</span>
-                        </label>
-                        <div id="noticeInputGroup" class="hidden pl-0 mt-2">
-                            <label class="block text-sm mb-1 text-plus-5">終止合約通知日期</label>
-                            <input type="date" id="noticeDate" class="input-box" onblur="if(document.getElementById('checkNotice').checked) { validateRequired(this); checkNoticeDate(); }">
+                        <label class="block font-semibold mb-2">一個月通知期</label>
+                        <select id="noticePayType" class="input-box">
+                            <option value="給一個月通知期">給一個月通知期</option>
+                            <option value="給一個月代通知金">給一個月代通知金</option>
+                            <option value="給部分代通知金">給部分代通知金</option>
+                        </select>
+                        
+                        <!-- Always visible input group as per requirement -->
+                        <div id="noticeInputGroup" class="pl-0 mt-2">
+                            <label class="block text-sm mb-1 text-plus-5">終止合約通知日期 (寫通知日期，不是寫離職日期)</label>
+                            <input type="date" id="noticeDate" class="input-box" onblur="validateRequired(this); checkNoticeDate();">
                             <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                             <div id="warn-notice-date" class="validation-error">通知日期是否有錯誤，請檢查</div>
                         </div>
@@ -310,7 +302,7 @@
                         </label>
                         <div id="lspInputGroup" class="hidden pl-0 mt-2">
                             <label class="block text-sm mb-1 text-plus-5">第一份合約的第一天工作日 (所有合約)</label>
-                            <input type="date" id="firstContractDate" class="input-box" onblur="if(document.getElementById('checkLSP').checked) { validateRequired(this); checkLSPValidity(); calcWorkYears(); }">
+                            <input type="date" id="firstContractDate" class="input-box" onblur="if(document.getElementById('checkLSP').checked) { validateRequired(this); calcWorkYears(); }">
                             <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                             
                             <div id="workYearsDisplay" class="mt-2 p-2 bg-gray-100 rounded text-plus-5 hidden"></div>
@@ -333,7 +325,6 @@
                     <!-- Details - Vertical Layout & On Top -->
                     <div class="mb-6 p-4 border rounded bg-gray-50">
                         <div class="flex items-center gap-3 mb-2">
-                            <!-- Icon removed as requested -->
                             <label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="checkbox" id="checkDetails" class="w-5 h-5 text-blue-600" onchange="toggleInput('detailsInputGroup')">
                                 <span class="font-semibold">填寫合約資料 (如有)</span>
@@ -343,22 +334,22 @@
                         <div id="detailsInputGroup" class="hidden mt-4 space-y-4">
                             <div>
                                 <label class="block mb-1 font-semibold">僱主姓名</label>
-                                <input type="text" id="employerName" class="input-box" onblur="validateContractDetails(this)">
+                                <input type="text" id="employerName" class="input-box" placeholder="" onblur="validateContractDetails(this)">
                                 <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                             </div>
                             <div>
                                 <label class="block mb-1 font-semibold">外傭姓名</label>
-                                <input type="text" id="helperName" class="input-box" onblur="validateContractDetails(this)">
+                                <input type="text" id="helperName" class="input-box" placeholder="" onblur="validateContractDetails(this)">
                                 <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                             </div>
                             <div>
                                 <label class="block mb-1 font-semibold">外傭香港身份證號碼／護照號碼</label>
-                                <input type="text" id="helperId" class="input-box" onblur="validateContractDetails(this)">
+                                <input type="text" id="helperId" class="input-box" placeholder="" onblur="validateContractDetails(this)">
                                 <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                             </div>
                             <div>
                                 <label class="block mb-1 font-semibold">合約號碼</label>
-                                <input type="text" id="contractNo" class="input-box" onblur="validateContractDetails(this)">
+                                <input type="text" id="contractNo" class="input-box" placeholder="" onblur="validateContractDetails(this)">
                                 <div class="validation-error">你漏寫資料，請檢查和填寫所有資料</div>
                             </div>
                             <div>
@@ -487,7 +478,7 @@
                                 <div id="p-noticeDateDisplay" class="pl-4 hidden text-gray-600"></div>
                             </div>
                             <div class="w-1/4 text-right border-b border-black">
-                                <span class="preview-currency mr-1">HK$</span> <span contenteditable="true" id="p-amount-5" class="preview-amount">0.0</span>
+                                <span id="p-amount-5-prefix" class="preview-currency mr-1">HK$</span> <span contenteditable="true" id="p-amount-5" class="preview-amount">0.0</span>
                             </div>
                         </div>
 
@@ -524,8 +515,8 @@
                         <!-- Remark -->
                         <div class="mt-4">
                             <div class="font-bold">(9) 備註 (如有) Remark：</div>
-                            <!-- Adjusted margin for line moving down 5px -->
-                            <div class="border-b border-black min-h-[1.5em] pl-2 mt-[5px]" id="p-remark"></div>
+                            <!-- Adjusted margin for line moving down 5px and added pb-2 for line distance -->
+                            <div class="border-b border-black min-h-[1.5em] pl-2 mt-[5px] pb-2" id="p-remark"></div>
                         </div>
                     </div>
 
@@ -537,7 +528,8 @@
                     </div>
 
                     <!-- Signatures -->
-                    <div class="mt-12 flex justify-between">
+                    <!-- Added mt-5 to the container to move the lines down (increase space above them) -->
+                    <div class="mt-[60px] flex justify-between">
                         <div class="text-center w-5/12">
                             <div class="border-t border-black pt-2">僱主簽署 Signature of Employer</div>
                         </div>
@@ -561,17 +553,13 @@
         <!-- ========================================== -->
         <div id="tab-weeks" class="tab-content hidden text-enlarged">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
-                <div class="flex items-center gap-3 mb-6 border-b pb-2">
-                    <span class="text-2xl text-royal-blue"><i class="fa-regular fa-calendar-days"></i></span>
-                    <h2 class="text-2xl font-bold text-gray-800">🗓️ 4/6/8週計算機</h2>
-                </div>
-                
                 <div class="mb-6">
-                    <label class="block font-semibold mb-2">簽證完約日期 或 死移財最後工作日期</label>
+                    <label class="block font-semibold mb-2">📅 簽證完約日期 或 死移財最後工作日期</label>
                     <input type="date" id="visaEndDate" class="input-box" onchange="calcWeeks()">
                 </div>
 
-                <div class="mb-4 bg-light-yellow p-3 rounded border border-yellow-200">
+                <!-- Increased line-height by 3px approx (28+3 = 31px) -->
+                <div class="mb-4 bg-light-yellow p-3 rounded border border-yellow-200" style="line-height: 31px;">
                     <p class="text-sm font-semibold text-plus-5">如果是印尼外傭，請在「最早可遞交入境處」前2星期就開始驗身和遞交文件給印尼領事館</p>
                 </div>
 
@@ -609,17 +597,11 @@
         <!-- ========================================== -->
         <div id="tab-leave" class="tab-content hidden space-y-8 text-enlarged">
             
-            <div class="flex items-center gap-3 justify-center mb-4">
-                <span class="text-3xl text-royal-blue"><i class="fa-solid fa-plane"></i></span>
-                <h2 class="text-2xl font-bold">✈️ 放假計算機</h2>
-            </div>
-            <!-- Removed the redundant text below header -->
-
             <!-- Forward -->
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto border-t-4 border-blue-500">
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-xl font-bold">🗓️➡️ 順計日子 <span class="text-sm font-normal text-gray-600 block">(已有放假第一天，要計算最後一天)</span></h3>
-                    <button onclick="clearSection('fwd')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"><i class="fa-solid fa-eraser"></i> 清除內容</button>
+                    <button onclick="clearSection('fwd')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded btn-clear-large"><i class="fa-solid fa-eraser"></i> 清除內容</button>
                 </div>
                 
                 <div class="space-y-4">
@@ -654,7 +636,7 @@
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto border-t-4 border-green-500">
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-xl font-bold">🗓️⬅️ 倒計日子 <span class="text-sm font-normal text-gray-600 block">(已有放假最後一天，要計算第一天)</span></h3>
-                    <button onclick="clearSection('bwd')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"><i class="fa-solid fa-eraser"></i> 清除內容</button>
+                    <button onclick="clearSection('bwd')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded btn-clear-large"><i class="fa-solid fa-eraser"></i> 清除內容</button>
                 </div>
 
                 <div class="space-y-4">
@@ -689,7 +671,7 @@
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto border-t-4 border-purple-500">
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-xl font-bold">🗓️↔️ 固定放假日子 <span class="text-sm font-normal text-gray-600 block">(不計算當中 休息日 和 勞工假期)</span></h3>
-                    <button onclick="clearSection('rng')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"><i class="fa-solid fa-eraser"></i> 清除內容</button>
+                    <button onclick="clearSection('rng')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded btn-clear-large"><i class="fa-solid fa-eraser"></i> 清除內容</button>
                 </div>
 
                 <div class="space-y-4">
@@ -763,6 +745,15 @@
             let [y, m, d] = dateStr.split('-');
             return `${d}-${m}-${y}`;
         }
+        
+        // Helper for dd-mm-yyyy only for specific sections
+        function formatDateDDMMYYYY(dateObj) {
+            if(!dateObj || isNaN(dateObj.getTime())) return "-";
+            let y = dateObj.getFullYear();
+            let m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            let d = String(dateObj.getDate()).padStart(2, '0');
+            return `${d}-${m}-${y}`;
+        }
 
         function truncate1Decimal(num) {
             return Math.floor(num * 10) / 10;
@@ -804,6 +795,15 @@
                 if(err) err.style.display = 'none';
             }
         }
+        
+        // Notice Input is always visible for all options now, just clearing error states
+        function toggleNoticeInput() {
+             // Just in case we need logic here
+             document.getElementById('noticeDate').classList.remove('bg-red-50', 'border-red-500');
+             const err = document.getElementById('noticeDate').nextElementSibling;
+             if(err) err.style.display = 'none';
+             document.getElementById('warn-notice-date').style.display = 'none';
+        }
 
         function togglePaymentOther() {
             const val = document.getElementById('paymentMethod').value;
@@ -831,7 +831,7 @@
             document.getElementById('dailyRate').innerText = '0.000';
             document.getElementById('proRataLeave').innerText = '0.000';
             document.getElementById('finalLeaveDays').innerText = '0.000';
-            document.getElementById('noticeInputGroup').classList.add('hidden');
+            // Notice input is not hidden anymore
             document.getElementById('lspInputGroup').classList.add('hidden');
             document.getElementById('detailsInputGroup').classList.add('hidden');
             document.getElementById('airTicketCashInputDiv').classList.add('hidden');
@@ -886,17 +886,6 @@
             const warn = document.getElementById('warn-3months');
             
             if(startStr && endStr) {
-                // Rule: LastWork - LastContract - 1
-                // Prompt: "Calculate date... if less than 'this calculation answer' (implies 3 months concept)"
-                // I will use day diff check: 3 months approx 90 days.
-                let days = dateDiff(startStr, endStr);
-                // Prompt says: (LastWorkDay - LastContractStart - 1).
-                // Let's calculate that strictly.
-                // Actually the prompt implies comparing dates.
-                // "How to decide... Calculate: LastWorkDay - LastContractStart - 1."
-                // "If calculation answer date is less than..." -> This phrasing is tricky.
-                // Standard: < 3 months.
-                // Let's check simply: is duration < 3 months.
                 let dStart = new Date(startStr);
                 let dEnd = new Date(endStr);
                 
@@ -919,25 +908,17 @@
             const workEnd = document.getElementById('lastWorkDay').value;
             const warn = document.getElementById('warn-latepay');
             
-            // Logic: "離職月份的工作日數" > 36 show warning
-            // Work days = LastWork - PeriodStart + 1.
+            // Logic: "離職月份的工作日數" > 35 show warning (Requested: 多過35)
             const workDaysEl = document.getElementById('workDaysResult');
             const days = parseInt(workDaysEl.innerText);
             
-            if(!isNaN(days) && days > 36) warn.style.display = 'block';
+            if(!isNaN(days) && days > 35) warn.style.display = 'block';
             else warn.style.display = 'none';
         }
 
         function checkLSPValidity() {
-            const first = document.getElementById('firstContractDate').value;
-            const end = document.getElementById('lastWorkDay').value;
-            const warn = document.getElementById('warn-lsp-salary'); 
-            
-            if(first && end) {
-                let years = (dateDiff(first, end) + 1) / 365;
-                if(years < 5) warn.style.display = 'block';
-                else warn.style.display = 'none';
-            }
+            // Functionality moved to calcWorkYears logic for shared warning display
+            calcWorkYears();
         }
         
         function checkNoticeDate() {
@@ -955,7 +936,6 @@
                 let dEnd = new Date(endStr);
                 
                 // Allow notice date to be equal to start or end? "Between" usually inclusive.
-                // Prompt: "介乎由...至...之間的任何日期" -> Inclusive.
                 if(dNotice < dStart || dNotice > dEnd) {
                     warn.style.display = 'block';
                 } else {
@@ -968,6 +948,7 @@
             const first = document.getElementById('firstContractDate').value;
             const end = document.getElementById('lastWorkDay').value;
             const display = document.getElementById('workYearsDisplay');
+            const warn = document.getElementById('warn-lsp-salary'); 
             
             if(first && end) {
                 let days = dateDiff(first, end) + 1;
@@ -975,8 +956,16 @@
                 display.innerText = `工作年期：${years.toFixed(2)}年 (共${days}日)`;
                 display.classList.remove('hidden');
                 display.classList.add('block');
+                
+                // Warning Logic: <= 1825 days
+                if(days <= 1825) {
+                    warn.style.display = 'block';
+                } else {
+                    warn.style.display = 'none';
+                }
             } else {
                 display.classList.add('hidden');
+                warn.style.display = 'none';
             }
         }
 
@@ -1006,6 +995,7 @@
                 let dStart = addDays(endStr, 1);
                 let diff = dateDiff(formatDate(dStart), lastWork) + 1;
                 document.getElementById('workDaysResult').innerText = diff;
+                checkLatePayment(); // Check whenever days change
             }
         }
 
@@ -1039,8 +1029,11 @@
 
         function calcFinalLeave() {
             const proRata = parseFloat(document.getElementById('proRataLeave').innerText) || 0;
-            const taken = parseFloat(document.getElementById('leaveTaken').value) || 0;
-            const untakenHolidays = parseFloat(document.getElementById('holidaysUntaken').value) || 0;
+            const takenInput = document.getElementById('leaveTaken').value;
+            const untakenInput = document.getElementById('holidaysUntaken').value;
+            
+            const taken = parseFloat(takenInput) || 0;
+            const untakenHolidays = parseFloat(untakenInput) || 0;
             
             const final = proRata - taken + untakenHolidays;
             document.getElementById('finalLeaveDays').innerText = final.toFixed(3);
@@ -1068,26 +1061,18 @@
              dCheck.setMonth(dCheck.getMonth() - 1);
              
              // Compare dCheck with dPeriodStart
-             // We need to compare just the date strings to avoid time issues
              if(formatDate(dCheck) === formatDate(dPeriodStart)) {
                  return salary;
              }
              
              // 2. Check More than 1 Month
-             // If dPeriodStart is BEFORE dCheck, it means we have > 1 month
              if(dPeriodStart < dCheck) {
-                 // Formula: (LastWork - LastWork's Prev Month End) * Daily + Salary
-                 // Find LastWork's Prev Month End.
-                 // E.g. LastWork Jan 15. Prev Month End = Dec 31.
                  let dPrevMonthEnd = new Date(dLastWork.getFullYear(), dLastWork.getMonth(), 0); 
-                 
-                 // Days diff
-                 let diffDays = dateDiff(formatDate(dPrevMonthEnd), lastWorkStr); // Should be positive
+                 let diffDays = dateDiff(formatDate(dPrevMonthEnd), lastWorkStr); 
                  return (diffDays * dailyRate) + salary;
              }
              
              // 3. Partial Month (Default)
-             // WorkDays * Daily
              const workDays = parseFloat(document.getElementById('workDaysResult').innerText);
              return workDays * dailyRate;
         }
@@ -1102,14 +1087,23 @@
                 if(['remark', 'otherPayment', 'paymentMethodOther', 'airTicketCashValue'].includes(input.id)) return;
                 if(input.id.startsWith('employer') || input.id.startsWith('helper') || input.id.startsWith('contract') || input.id.startsWith('payment')) return; // Details handled separately
                 
-                if(input.id === 'noticeDate' && !document.getElementById('checkNotice').checked) return;
                 if(input.id === 'firstContractDate' && !document.getElementById('checkLSP').checked) return;
 
+                // Explicitly valid empty or 0 inputs only if allowed (checked "leaveTaken" and "holidaysUntaken" are numeric and 0 is valid, but empty is not)
+                // contractCount also cannot be empty
                 if(!input.value && input.value !== 0 && input.value !== "0") {
                     isValid = false;
                     validateRequired(input);
                 }
             });
+            
+            // Check Notice Pay Date
+            // Always required for all options now
+            const nDate = document.getElementById('noticeDate');
+            if(!nDate.value) {
+                isValid = false;
+                validateRequired(nDate);
+            }
             
             // Check Air Ticket Cash specific
             if(document.getElementById('airTicketType').value === '折現機票') {
@@ -1126,7 +1120,7 @@
                 ids.forEach(id => {
                     const el = document.getElementById(id);
                     if(!el.value) isValid = false;
-                    else validateRequired(el); // show red if missing (visual)
+                    else validateRequired(el); 
                     
                     if(id === 'paymentMethod' && el.value === 'Other' && !document.getElementById('paymentMethodOther').value) {
                          isValid = false;
@@ -1152,7 +1146,7 @@
         }
 
         function transferToPreview() {
-            // Details - Clear placeholders
+            // Details
             document.getElementById('p-employerName').innerText = document.getElementById('employerName').value || '';
             document.getElementById('p-helperName').innerText = document.getElementById('helperName').value || '';
             document.getElementById('p-helperId').innerText = document.getElementById('helperId').value || '';
@@ -1179,7 +1173,7 @@
 
             // (2) Leave Pay
             const finalLeave = parseFloat(document.getElementById('finalLeaveDays').innerText);
-            document.getElementById('p-untakenDays').innerText = finalLeave.toFixed(1); // 1 decimal per request
+            document.getElementById('p-untakenDays').innerText = finalLeave.toFixed(1); 
             document.getElementById('p-untakenDaysEn').innerText = finalLeave.toFixed(1); 
             
             const dailyRate = parseFloat(document.getElementById('dailyRate').innerText.replace(/,/g,'')) || 0;
@@ -1207,30 +1201,40 @@
                 amount4El.innerText = "air ticket already bought";
             }
 
-            // (5) Notice Pay & Date Display
+            // (5) Notice Pay
             let amount5 = 0;
+            const noticeType = document.getElementById('noticePayType').value;
+            const amount5El = document.getElementById('p-amount-5');
+            const prefix5 = document.getElementById('p-amount-5-prefix');
             const noticeDisplay = document.getElementById('p-noticeDateDisplay');
-            noticeDisplay.classList.add('hidden');
+            const noticeDate = document.getElementById('noticeDate').value;
+            
+            // Show informed date line
+            if(noticeDate) {
+                noticeDisplay.innerText = `通知日期 informed on ${formatDisplayDate(noticeDate)}`;
+                noticeDisplay.classList.remove('hidden');
+                noticeDisplay.classList.add('block');
+            } else {
+                noticeDisplay.classList.add('hidden');
+            }
+            
+            // Default show prefix
+            prefix5.classList.remove('hidden');
 
-            if(document.getElementById('checkNotice').checked) {
-                const noticeDate = document.getElementById('noticeDate').value;
+            if(noticeType === '給一個月通知期') {
+                prefix5.classList.add('hidden');
+                amount5El.innerText = "1 month notice";
+            } else if(noticeType === '給一個月代通知金') {
+                amount5 = parseFloat(document.getElementById('salary').value) || 0;
+                amount5El.innerText = formatMoney(amount5);
+            } else if(noticeType === '給部分代通知金') {
                 const termDate = document.getElementById('lastWorkDay').value;
-                
-                // Show informed date line
-                if(noticeDate) {
-                    noticeDisplay.innerText = `通知日期 informed on ${formatDisplayDate(noticeDate)}`;
-                    noticeDisplay.classList.remove('hidden');
-                    noticeDisplay.classList.add('block');
-                }
-
-                if(noticeDate === termDate) {
-                    amount5 = parseFloat(document.getElementById('salary').value);
-                } else {
+                if(noticeDate && termDate) {
                     let diff = dateDiff(noticeDate, termDate);
                     amount5 = diff * dailyRate;
+                    amount5El.innerText = formatMoney(amount5);
                 }
             }
-            document.getElementById('p-amount-5').innerText = formatMoney(amount5);
 
             // (6) LSP
             let amount6 = 0;
@@ -1260,19 +1264,24 @@
 
         function updateTotal() {
             let total = 0;
-            // 1, 2, 3, 5, 6, 7 always sum. 4 sums only if numeric (Cash).
-            
-            const ids = [1, 2, 3, 5, 6, 7];
+            const ids = [1, 2, 3, 6, 7]; // 5 handled separate logic below
             ids.forEach(i => {
                 let txt = document.getElementById(`p-amount-${i}`).innerText.replace(/,/g, '');
                 let val = parseFloat(txt) || 0;
                 total += val;
             });
 
-            // Check item 4
+            // Item 4
             let txt4 = document.getElementById(`p-amount-4`).innerText;
             if(!isNaN(parseFloat(txt4)) && txt4.indexOf('ticket') === -1) {
                 total += parseFloat(txt4.replace(/,/g, '')) || 0;
+            }
+            
+            // Item 5 (Notice)
+            let txt5 = document.getElementById(`p-amount-5`).innerText;
+            // Only add if it's a number (not "1 month notice")
+            if(!isNaN(parseFloat(txt5)) && txt5.indexOf('notice') === -1) {
+                 total += parseFloat(txt5.replace(/,/g, '')) || 0;
             }
 
             document.getElementById('p-total').innerText = formatMoney(total);
@@ -1307,19 +1316,19 @@
 
             // Earliest Submit = -28
             let d28 = addDays(input, -28);
-            document.getElementById('res-4weeks').innerText = formatDate(d28);
+            document.getElementById('res-4weeks').innerText = formatDateDDMMYYYY(d28);
 
             // Early Release Date (6 weeks) = -42
             let d42 = addDays(input, -42);
-            document.getElementById('res-6weeks').innerText = formatDate(d42);
+            document.getElementById('res-6weeks').innerText = formatDateDDMMYYYY(d42);
 
             // Early Release Submit = Early Release Date - 28 = -70
             let dEarlySubmit = addDays(formatDate(d42), -28);
-            document.getElementById('res-earliest').innerText = formatDate(dEarlySubmit);
+            document.getElementById('res-earliest').innerText = formatDateDDMMYYYY(dEarlySubmit);
 
             // Renewal Submit = -56
             let d56 = addDays(input, -56);
-            document.getElementById('res-8weeks').innerText = formatDate(d56);
+            document.getElementById('res-8weeks').innerText = formatDateDDMMYYYY(d56);
         }
 
         // === Leave Calculator ===
@@ -1347,13 +1356,13 @@
             if(start && daysStr !== '') {
                 const days = parseInt(daysStr);
                 let dSub = addDays(start, days - 1);
-                document.getElementById('fwd-end-sub').innerText = formatDate(dSub);
+                document.getElementById('fwd-end-sub').innerText = formatDateDDMMYYYY(dSub);
                 
                 // Only calc final if hols present
                 if(holsStr !== '') {
                     const hols = parseInt(holsStr);
                     let dFinal = addDays(formatDate(dSub), hols);
-                    document.getElementById('fwd-end-final').innerText = formatDate(dFinal);
+                    document.getElementById('fwd-end-final').innerText = formatDateDDMMYYYY(dFinal);
 
                     let span = dateDiff(start, formatDate(dFinal)) + 1;
                     document.getElementById('fwd-span').innerText = span + " 日";
@@ -1377,12 +1386,12 @@
             if(end && daysStr !== '') {
                 const days = parseInt(daysStr);
                 let dSub = addDays(end, -(days - 1));
-                document.getElementById('bwd-start-sub').innerText = formatDate(dSub);
+                document.getElementById('bwd-start-sub').innerText = formatDateDDMMYYYY(dSub);
 
                 if(holsStr !== '') {
                     const hols = parseInt(holsStr);
                     let dFinal = addDays(formatDate(dSub), -hols);
-                    document.getElementById('bwd-start-final').innerText = formatDate(dFinal);
+                    document.getElementById('bwd-start-final').innerText = formatDateDDMMYYYY(dFinal);
 
                     let span = dateDiff(formatDate(dFinal), end) + 1;
                     document.getElementById('bwd-span').innerText = span + " 日";
